@@ -1,6 +1,7 @@
 from PyQt5.QtGui import QImage, QPixmap, QColor, QImageReader, QImageWriter
 from PyQt5.QtCore import Qt
 import numpy as np
+import matplotlib.pyplot as plt
 import sys
 import cv2
 from PIL import Image
@@ -86,10 +87,13 @@ class Colours(object):
         self.actionKeluar.triggered.connect(self.show_exit_confirmation) 
         self.actionInput = QtWidgets.QAction(MainWindow)
         self.actionInput.setObjectName("actionInput")
+        self.actionInput.triggered.connect(self.show_input_histogram)
         self.actionOutput = QtWidgets.QAction(MainWindow)
         self.actionOutput.setObjectName("actionOutput")
+        self.actionOutput.triggered.connect(self.show_output_histogram)
         self.actionInput_Output = QtWidgets.QAction(MainWindow)
         self.actionInput_Output.setObjectName("actionInput_Output")
+        self.actionInput_Output.triggered.connect(self.show_input_and_output)
         self.actionBrightness_Contras = QtWidgets.QAction(MainWindow)
         self.actionBrightness_Contras.setObjectName("actionBrightness_Contras")
         self.actionInvers = QtWidgets.QAction(MainWindow)
@@ -494,10 +498,49 @@ class Colours(object):
         # Tampilkan gambar hasil
         self.show_image(gray_image)
         
-    def show_image(self, image):
-        pixmap = QtGui.QPixmap.fromImage(image)
-        self.label_2.setPixmap(pixmap)
-        self.label_2.setScaledContents(True)
+    def show_input_histogram(self):
+        if hasattr(self, 'image'):
+            gray_image = self.image.convertToFormat(QtGui.QImage.Format_Grayscale8)
+
+            # Hitung histogram gambar
+            histogram = [0] * 256
+            for y in range(gray_image.height()):
+                for x in range(gray_image.width()):
+                    pixel_value = gray_image.pixelColor(x, y).red()
+                    histogram[pixel_value] += 1
+
+            # Tampilkan histogram menggunakan Matplotlib
+            plt.figure()
+            plt.bar(np.arange(256), histogram, color='gray', alpha=0.7)
+            plt.xlabel('Nilai Piksel')
+            plt.ylabel('Frekuensi')
+            plt.title('Histogram Gambar Input')
+            plt.show()
+            
+    def show_output_histogram(self):
+        if hasattr(self, 'label_2'):
+            pixmap = self.label_2.pixmap()
+            if pixmap:
+                gray_image = pixmap.toImage().convertToFormat(QtGui.QImage.Format_Grayscale8)
+
+                # Hitung histogram gambar hasil equalisasi
+                histogram = [0] * 256
+                for y in range(gray_image.height()):
+                    for x in range(gray_image.width()):
+                        pixel_value = gray_image.pixelColor(x, y).red()
+                        histogram[pixel_value] += 1
+
+                # Tampilkan histogram menggunakan Matplotlib
+                plt.figure()
+                plt.bar(np.arange(256), histogram, color='gray', alpha=0.7)
+                plt.xlabel('Nilai Piksel')
+                plt.ylabel('Frekuensi')
+                plt.title('Histogram Gambar Output')
+                plt.show()
+
+    def show_input_and_output(self):
+        self.show_input_histogram()
+        self.show_output_histogram()
 
 
 
