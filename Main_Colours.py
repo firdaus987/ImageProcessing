@@ -274,6 +274,14 @@ class Colours(object):
         self.colours_window = Colours()
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+    def Geometri(self):
+     
+        
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.ui = Ui_Geometri()
+        self.ui.setupUi(self.MainWindow)
+        self.MainWindow.show()
+
     def Aritmath1(self):
 
         
@@ -282,13 +290,7 @@ class Colours(object):
         self.ui.setupUi(self.MainWindow)
         self.MainWindow.show()
 
-    def Geometri(self):
- 
-        
-        self.MainWindow = QtWidgets.QMainWindow()
-        self.ui = Ui_Geometri()
-        self.ui.setupUi(self.MainWindow)
-        self.MainWindow.show()
+
 
     
     def Main_Colours(self):
@@ -524,6 +526,7 @@ class Colours(object):
                 new_pixel_value = int(cumulative_distribution[pixel_value] * 255)
                 gray_image.setPixelColor(x, y, QtGui.QColor(new_pixel_value, new_pixel_value, new_pixel_value))
 
+
         # Tampilkan gambar hasil
         self.show_image(gray_image)
         
@@ -570,6 +573,7 @@ class Colours(object):
     def show_input_and_output(self):
         self.show_input_histogram()
         self.show_output_histogram()
+        
 
 
 

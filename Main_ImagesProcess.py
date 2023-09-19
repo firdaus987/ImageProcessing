@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from Colours import Colours 
+from Main_Colours import Colours 
 from Aritmath1 import Ui_Aritmath
 
 
