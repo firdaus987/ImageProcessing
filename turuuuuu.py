@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QWidget, QScrollArea, QPushButton, QAction
-from aritmatika import Ui_MainWindow as latihan # Mengimpor kelas Ui_MainWindow dari modul aritmatika dan memberinya alias latihan.
+#from aritmatika import Ui_MainWindow as latihan # Mengimpor kelas Ui_MainWindow dari modul aritmatika dan memberinya alias latihan.
 import numpy as np
 import sys
 import cv2
@@ -64,7 +64,7 @@ class Ui_MainWindow(object):
         self.menuAritmatical_Operation = QtWidgets.QMenu(self.menubar)
         self.menuAritmatical_Operation.setObjectName("menuAritmatical_Operation")
         arithmetic_action = self.menuAritmatical_Operation.addAction("Aritmatika")
-        arithmetic_action.triggered.connect(self.frameArimatika)
+        # arithmetic_action.triggered.connect(self.frameArimatika)
         self.menuIler = QtWidgets.QMenu(self.menubar)
         self.menuIler.setObjectName("menuIler")
         self.menuEdge_Detection_2 = QtWidgets.QMenu(self.menuIler)
@@ -378,12 +378,12 @@ class Ui_MainWindow(object):
 
     
 
-    def frameArimatika(self): 
-        # Definisi fungsi frameArimatika yang merupakan metode dari suatu kelas. Fungsi ini mungkin digunakan untuk membuat dan menampilkan sebuah jendela Qt.
-        self.window = QtWidgets.QMainWindow() # Membuat sebuah objek jendela utama dari Qt.
-        self.ui = latihan() # Membuat sebuah objek dari kelas latihan.
-        self.ui.setupUi(self.window) # Memanggil metode setupUi dari objek ui untuk menginisialisasi tampilan antarmuka.
-        self.window.show()  # Menampilkan jendela utama. 
+    # def frameArimatika(self): 
+    #     # Definisi fungsi frameArimatika yang merupakan metode dari suatu kelas. Fungsi ini mungkin digunakan untuk membuat dan menampilkan sebuah jendela Qt.
+    #     self.window = QtWidgets.QMainWindow() # Membuat sebuah objek jendela utama dari Qt.
+    #     self.ui = latihan() # Membuat sebuah objek dari kelas latihan.
+    #     self.ui.setupUi(self.window) # Memanggil metode setupUi dari objek ui untuk menginisialisasi tampilan antarmuka.
+    #     self.window.show()  # Menampilkan jendela utama. 
         
     def saveImage(self):
         # Inisialisasi opsi untuk dialog pemilihan berkas
