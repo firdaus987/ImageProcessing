@@ -9,6 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QAction, QFileDialog, QMessageBox
 from io import BytesIO
 from Aritmath1 import Ui_Aritmath
+from Geometri import Ui_Geometri
 
 
 class Colours(object):
@@ -71,8 +72,8 @@ class Colours(object):
         self.menuOpening.setObjectName("menuOpening")
         self.menuClosing = QtWidgets.QMenu(self.menuMorfologi)
         self.menuClosing.setObjectName("menuClosing")
-        self.menuTentang = QtWidgets.QMenu(self.menubar)
-        self.menuTentang.setObjectName("menuTentang")
+        self.menuGeometri = QtWidgets.QMenu(self.menubar)
+        self.menuGeometri.setObjectName("menuGeometri")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -190,6 +191,9 @@ class Colours(object):
         self.actionOperasi_Aritmatika = QtWidgets.QAction(MainWindow)
         self.actionOperasi_Aritmatika.setObjectName("actionOperasi_Aritmatika")
         self.actionOperasi_Aritmatika.triggered.connect(self.Aritmath1)
+        self.actionOperasi_Geometri = QtWidgets.QAction(MainWindow)
+        self.actionOperasi_Geometri.setObjectName("actionOperasi_Geometri")
+        self.actionOperasi_Geometri.triggered.connect(self.Geometri)
         self.menuFile.addAction(self.actionBuka)
         self.menuFile.addAction(self.actionSimpan_Sebagai)
         self.menuFile.addAction(self.actionKeluar)
@@ -224,6 +228,7 @@ class Colours(object):
         self.menuImage_Processing.addAction(self.actionFuzzy_HE_RGB)
         self.menuImage_Processing.addAction(self.actionFuzzy_Grayscale)
         self.menuAritmatic_Operations.addAction(self.actionOperasi_Aritmatika)
+        self.menuGeometri.addAction(self.actionOperasi_Geometri)
         self.menuEdge_Detection.addAction(self.actionEdge_Detection_1)
         self.menuEdge_Detection.addAction(self.actionEdge_Detection_2)
         self.menuEdge_Detection.addAction(self.actionEdge_Detection_3)
@@ -260,18 +265,35 @@ class Colours(object):
         self.menubar.addAction(self.menuFilter.menuAction())
         self.menubar.addAction(self.menuEdge_Detection_2.menuAction())
         self.menubar.addAction(self.menuMorfologi.menuAction())
-        self.menubar.addAction(self.menuTentang.menuAction())
+        self.menubar.addAction(self.menuGeometri.menuAction())
         
-        # self.menuAritmatic_Operations.triggered.connect(Aritmath)
 
         self.retranslateUi(MainWindow)
+        
+        # Inisialisasi jendela "Colours"
+        self.colours_window = Colours()
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def Aritmath1(self):
+
+        
         self.MainWindow = QtWidgets.QMainWindow()
         self.ui = Ui_Aritmath()
         self.ui.setupUi(self.MainWindow)
         self.MainWindow.show()
+
+    def Geometri(self):
+ 
+        
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.ui = Ui_Geometri()
+        self.ui.setupUi(self.MainWindow)
+        self.MainWindow.show()
+
+    
+    def Main_Colours(self):
+        self.colours_window.show()
+
     
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -295,7 +317,7 @@ class Colours(object):
         self.menuDilation.setTitle(_translate("MainWindow", "Dilation"))
         self.menuOpening.setTitle(_translate("MainWindow", "Opening"))
         self.menuClosing.setTitle(_translate("MainWindow", "Closing"))
-        self.menuTentang.setTitle(_translate("MainWindow", "Tentang"))
+        self.menuGeometri.setTitle(_translate("MainWindow", "Geometri"))
         self.actionBuka.setText(_translate("MainWindow", "Buka"))
         self.actionSimpan_Sebagai.setText(_translate("MainWindow", "Simpan Sebagai"))
         self.actionSimpan_Sebagai.triggered.connect(self.save_image)
@@ -348,10 +370,17 @@ class Colours(object):
         self.actionSquare_9.setText(_translate("MainWindow", "Square 9"))
         self.actionSquare_10.setText(_translate("MainWindow", "Square 9"))
         self.actionOperasi_Aritmatika.setText(_translate("MainWindow", "Operasi Aritmatika"))
+        self.actionOperasi_Geometri.setText(_translate("MainWindow", "Operasi Geometri"))
     
     def Aritmath(self):
         self.MainWindow = QtWidgets.QMainWindow()
         self.ui = Ui_Aritmath()
+        self.ui.setupUi(MainWindow)
+        self.MainWindow.show()
+
+    def Geometri(self):
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.ui = Ui_Geometri()
         self.ui.setupUi(MainWindow)
         self.MainWindow.show()
         
