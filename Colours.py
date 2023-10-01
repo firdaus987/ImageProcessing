@@ -180,10 +180,13 @@ class Colours(object):
         self.actionCross_3.setObjectName("actionCross_3")
         self.actionSquare_4 = QtWidgets.QAction(MainWindow)
         self.actionSquare_4.setObjectName("actionSquare_4")
+        self.actionSquare_4.triggered.connect(self.dilate_image)
         self.actionSquare_6 = QtWidgets.QAction(MainWindow)
+        self.actionSquare_6.triggered.connect(self.dilate_image)
         self.actionSquare_6.setObjectName("actionSquare_6")
         self.actionCross_4 = QtWidgets.QAction(MainWindow)
         self.actionCross_4.setObjectName("actionCross_4")
+        self.actionCross_4.triggered.connect(self.dilate_image)
         self.actionSquare_9 = QtWidgets.QAction(MainWindow)
         self.actionSquare_9.setObjectName("actionSquare_9")
         self.actionSquare_10 = QtWidgets.QAction(MainWindow)
@@ -443,6 +446,26 @@ class Colours(object):
             output_file_name = self.pathh.replace(".", "_yellow.")
             image.save(output_file_name)  # Save the modified image with "_yellow" suffix
             self.show_image(output_file_name)
+            
+    def dilate_image(self):
+        if hasattr(self, 'image'):
+            # Gunakan filter berukuran 3x3 untuk dilasi
+            kernel = np.array([[1, 1, 1],
+                               [1, 1, 1],
+                               [1, 1, 1]], dtype=np.uint8)
+            
+            # Lakukan dilasi pada citra menggunakan OpenCV
+            dilated_image = cv2.dilate(self.image, kernel, iterations=1)
+            
+            # Konversi hasil dilasi ke tipe QImage
+            h, w, c = dilated_image.shape
+            bytes_per_line = 3 * w
+            q_image = QImage(dilated_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+            
+            # Tampilkan hasil dilasi pada label
+            pixmap = QPixmap.fromImage(q_image)
+            self.label_2.setPixmap(pixmap)
+            self.label_2.setScaledContents(True)
             
     def average_filter(self):
         width = self.image.width()

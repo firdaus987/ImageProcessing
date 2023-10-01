@@ -1,17 +1,17 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from Main_Colours import Colours 
-from Aritmath1 import Ui_Aritmath
+from Main_Processing import Ui_Process
+from Main_Aritmath import Ui_Aritmath
 
 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(654, 364)
+        MainWindow.resize(800, 366)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(30, 40, 571, 111))
+        self.label.setGeometry(QtCore.QRect(110, 30, 571, 111))
         font = QtGui.QFont()
         font.setFamily("MotterFemD")
         font.setPointSize(24)
@@ -20,21 +20,21 @@ class Ui_MainWindow(object):
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(110, 150, 421, 41))
+        self.label_2.setGeometry(QtCore.QRect(190, 140, 421, 41))
         font = QtGui.QFont()
         font.setPointSize(12)
         self.label_2.setFont(font)
         self.label_2.setAlignment(QtCore.Qt.AlignCenter)
         self.label_2.setObjectName("label_2")
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
-        self.label_3.setGeometry(QtCore.QRect(110, 170, 421, 41))
+        self.label_3.setGeometry(QtCore.QRect(190, 180, 421, 41))
         font = QtGui.QFont()
         font.setPointSize(12)
         self.label_3.setFont(font)
         self.label_3.setAlignment(QtCore.Qt.AlignCenter)
         self.label_3.setObjectName("label_3")
         self.label_4 = QtWidgets.QLabel(self.centralwidget)
-        self.label_4.setGeometry(QtCore.QRect(110, 190, 421, 41))
+        self.label_4.setGeometry(QtCore.QRect(190, 200, 421, 41))
         font = QtGui.QFont()
         font.setPointSize(12)
         self.label_4.setFont(font)
@@ -42,7 +42,7 @@ class Ui_MainWindow(object):
         self.label_4.setObjectName("label_4")
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setEnabled(True)
-        self.pushButton.setGeometry(QtCore.QRect(280, 270, 75, 23))
+        self.pushButton.setGeometry(QtCore.QRect(360, 240, 75, 23))
         self.pushButton.setAutoDefault(False)
         self.pushButton.setDefault(True)
         self.pushButton.setFlat(False)
@@ -73,7 +73,7 @@ class Ui_MainWindow(object):
         
     def Colours(self):
         self.MainWindow = QtWidgets.QMainWindow()
-        self.ui = Colours()
+        self.ui = Ui_Process()
         self.ui.setupUi(self.MainWindow)
         self.MainWindow.show()
         
