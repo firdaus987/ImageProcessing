@@ -1,11 +1,21 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QWidget, QScrollArea, QPushButton, QAction
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QFileDialog, QInputDialog
+from PyQt5.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QWidget, QScrollArea, QPushButton, QAction, QFileDialog
+from PyQt5.QtCore import QRectF, Qt
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QColor
+from PyQt5.QtWidgets import QGraphicsScene, QGraphicsView, QMainWindow, QApplication, QAction
+from PyQt5.QtWidgets import QAction, QFileDialog, QMessageBox
 from Main_Aritmath import Ui_Aritmath 
-import numpy as np
 import sys
 import cv2
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# from mrcnn import config
+# from mrcnn import model as modellib
+# from mrcnn.visualize import display_instances
 
 
 class Ui_Process(object):
@@ -80,7 +90,6 @@ class Ui_Process(object):
         MainWindow.setMenuBar(self.menubar)
         self.actionInput = QtWidgets.QAction(MainWindow)
         self.actionInput.setObjectName("actionInput")
-        # self.actionInput.triggered.connect(self.histogram)
         self.actionInput.triggered.connect(self.input_histogram)
         self.actionfliphorizontal = QtWidgets.QAction(MainWindow)
         self.actionfliphorizontal.setObjectName("actionFlipHorizontal")
@@ -93,7 +102,10 @@ class Ui_Process(object):
         self.actionRotate.triggered.connect(self.rotasiGambare)
         self.actionCroping = QtWidgets.QAction(MainWindow)
         self.actionCroping.setObjectName("ActionCroping")
-        # self.actionCroping.triggered.connect(self.cropImage)
+        self.actionCroping.triggered.connect(self.showCropDialog) 
+        self.actionTranslasi = QtWidgets.QAction(MainWindow)
+        self.actionTranslasi.setObjectName("ActionTranslasi")
+        self.actionTranslasi.triggered.connect(self.showTranslasiDialog)
         self.actionOutput = QtWidgets.QAction(MainWindow)
         self.actionOutput.setObjectName("actionOutput")
         self.actionOutput.triggered.connect(self.Output_histogram)
@@ -109,13 +121,13 @@ class Ui_Process(object):
         self.actionInvers.triggered.connect(self.Invers)
         self.actionTreshold = QtWidgets.QAction(MainWindow)
         self.actionTreshold.setObjectName("actionTreshold")
-        self.actionTreshold.triggered.connect(self.Thresholding)
-        self.actionLog_Brightness = QtWidgets.QAction(MainWindow)
-        self.actionLog_Brightness.setObjectName("actionLog_Brightness")
-        self.actionLog_Brightness.triggered.connect(self.segmentImage)
-        self.actionGamma_Corretion = QtWidgets.QAction(MainWindow)
-        self.actionGamma_Corretion.setObjectName("actionGamma_Corretion")
-        # self.actionGamma_Corretion.triggered.connect(self.removeBackground)
+        self.actionTreshold.triggered.connect(self.Tresholding)
+        self.actionSegmentasiCitra = QtWidgets.QAction(MainWindow)
+        self.actionSegmentasiCitra.setObjectName("actionSegmentasiCitra")
+        self.actionSegmentasiCitra.triggered.connect(self.segmentImage)
+        self.actionRemoveBg = QtWidgets.QAction(MainWindow)
+        self.actionRemoveBg.setObjectName("actionRemoveBg")
+        self.actionRemoveBg.triggered.connect(self.ApplyRemoveBg)
         self.actionKuning = QtWidgets.QAction(MainWindow)
         self.actionKuning.setObjectName("actionKuning")
         self.actionKuning.triggered.connect(self.Kuning)
@@ -182,6 +194,12 @@ class Ui_Process(object):
         self.actionFuzzy_Grayscale = QtWidgets.QAction(MainWindow)
         self.actionFuzzy_Grayscale.setObjectName("actionFuzzy_Grayscale")
         self.actionFuzzy_Grayscale.triggered.connect(self.fuzzy_greyscale)
+        self.actionROI = QtWidgets.QAction(MainWindow)
+        self.actionROI.setObjectName("actionROI")
+        self.actionROI.triggered.connect(self.ROIselected)
+        self.actionAutoROI = QtWidgets.QAction(MainWindow)
+        self.actionAutoROI.setObjectName("actionROI")
+        self.actionAutoROI.triggered.connect(self.AutoROIselected)
         self.actionIdentity = QtWidgets.QAction(MainWindow)
         self.actionIdentity.setObjectName("actionIdentity")
         self.actionIdentity.triggered.connect(self.Identity)
@@ -191,16 +209,18 @@ class Ui_Process(object):
         self.actionUnsharp_Masking = QtWidgets.QAction(MainWindow)
         self.actionUnsharp_Masking.setObjectName("actionUnsharp_Masking")
         self.actionUnsharp_Masking.triggered.connect(self.applyUnsharpMasking)
-        self.actionAvarage_Filter = QtWidgets.QAction(MainWindow)
-        self.actionAvarage_Filter.setObjectName("actionAvarage_Filter")
+        self.actionUniformScaling = QtWidgets.QAction(MainWindow)
+        self.actionUniformScaling.setObjectName("actionUniformScaling")
+        self.actionUniformScaling.triggered.connect(self.ShowUniformScaling)
+        self.actionNonUniformScaling = QtWidgets.QAction(MainWindow)
+        self.actionNonUniformScaling.setObjectName("actionNonUniformScaling")
+        self.actionNonUniformScaling.triggered.connect(self.ShowNonUniformScaling)
         self.actionLow_Pass_Filler = QtWidgets.QAction(MainWindow)
         self.actionLow_Pass_Filler.setObjectName("actionLow_Pass_Filler")
         self.actionLow_Pass_Filler.triggered.connect(self.applyLowpassFilter)
         self.actionHight_Pass_Filter = QtWidgets.QAction(MainWindow)
         self.actionHight_Pass_Filter.setObjectName("actionHight_Pass_Filter")
         self.actionHight_Pass_Filter.triggered.connect(self.applyHighPassFilter)
-        self.actionBandstop_Filter = QtWidgets.QAction(MainWindow)
-        self.actionBandstop_Filter.setObjectName("actionBandstop_Filter")
         self.actionEdge_Detection_1 = QtWidgets.QAction(MainWindow)
         self.actionEdge_Detection_1.setObjectName("actionEdge_Detection_1")
         self.actionEdge_Detection_2 = QtWidgets.QAction(MainWindow)
@@ -248,20 +268,22 @@ class Ui_Process(object):
         self.actionSquare_10.triggered.connect(self.applyClosingOperation)
         self.actionWarnaRGB = QtWidgets.QAction(MainWindow)
         self.actionWarnaRGB.setObjectName("actionWarnaRGB")
-        self.actionWarnaRGB.triggered.connect(self.extractfeaturesRGB)
+        self.actionWarnaRGB.triggered.connect(self.convertRGBtoRGB)
         self.actionWarnaRGBtoHSV= QtWidgets.QAction(MainWindow)
         self.actionWarnaRGBtoHSV.setObjectName("actionWarnaRGBtoHSV")
+        self.actionWarnaRGBtoHSV.triggered.connect(self.convertRGBtoHSV)
         self.actionWarnaRGBtoYCrCb= QtWidgets.QAction(MainWindow)
         self.actionWarnaRGBtoYCrCb.setObjectName("actionWarnaRGBtoYCrCb")
-        self.actionOpen_File = QtWidgets.QAction(MainWindow)
+        self.actionWarnaRGBtoYCrCb.triggered.connect(self.convertRGBtoYCrCb)
+        self.actionOpen_File = QtWidgets.QAction(QIcon("C:\Python34\Lib\site-packages\PyQt5\GUI\Images Process\Icon\open_icon.png"), "Buka", MainWindow)
         self.actionOpen_File.setObjectName("actionOpen_File")
         self.actionOpen_File.triggered.connect(self.openFile)
-        self.actionSave_As = QtWidgets.QAction(MainWindow)
+        self.actionSave_As = QtWidgets.QAction(QIcon("C:\Python34\Lib\site-packages\PyQt5\GUI\Images Process\Icon\save_icon.png"), "Simpan", MainWindow)
         self.actionSave_As.setObjectName("actionSave_As")
         self.actionSave_As.triggered.connect(self.saveImage)
-        self.actionKeluar = QtWidgets.QAction(MainWindow)
+        self.actionKeluar = QtWidgets.QAction(QIcon("C:\Python34\Lib\site-packages\PyQt5\GUI\Images Process\Icon\exit_icon.png"), "Keluar", MainWindow)
         self.actionKeluar.setObjectName("actionKeluar")
-        self.actionKeluar.triggered.connect(self.exitApplication)
+        self.actionKeluar.triggered.connect(self.show_exit_confirmation)
         self.menuHistogram.addAction(self.actionInput)
         self.menuHistogram.addAction(self.actionOutput)
         self.menuHistogram.addAction(self.actionInput_Output)
@@ -291,12 +313,14 @@ class Ui_Process(object):
         self.menuColors.addAction(self.actionBrightness_Contrast)
         self.menuColors.addAction(self.actionInvers)
         self.menuColors.addAction(self.actionTreshold)
-        self.menuColors.addAction(self.actionLog_Brightness)
         self.menuColors.addAction(self.menuBit_Depth.menuAction())
-        self.menuColors.addAction(self.actionGamma_Corretion)
         self.menuImage_Processing.addAction(self.actionHistogram_Equalization)
         self.menuImage_Processing.addAction(self.actionFuzzy_HE_RGB)
         self.menuImage_Processing.addAction(self.actionFuzzy_Grayscale)
+        self.menuImage_Processing.addAction(self.actionROI)
+        self.menuImage_Processing.addAction(self.actionAutoROI)
+        self.menuImage_Processing.addAction(self.actionSegmentasiCitra)
+        self.menuImage_Processing.addAction(self.actionRemoveBg)
         self.menuEdge_Detection_2.addAction(self.actionEdge_Detection_1)
         self.menuEdge_Detection_2.addAction(self.actionEdge_Detection_2)
         self.menuEdge_Detection_2.addAction(self.actionEdge_Detection_3)
@@ -309,8 +333,8 @@ class Ui_Process(object):
         self.menuIler.addAction(self.actionUnsharp_Masking)        
         self.menuIler.addAction(self.actionLow_Pass_Filler)
         self.menuIler.addAction(self.actionHight_Pass_Filter)
-        self.menuIler.addAction(self.actionAvarage_Filter)
-        self.menuIler.addAction(self.actionBandstop_Filter)
+        self.menuIler.addAction(self.actionUniformScaling)
+        self.menuIler.addAction(self.actionNonUniformScaling)
         self.menuEdge_Detection.addAction(self.actionPrewitt)
         self.menuEdge_Detection.addAction(self.actionSobel)
         self.menuEdge_Detection.addAction(self.actionRobert)
@@ -333,6 +357,7 @@ class Ui_Process(object):
         self.menuTentang.addAction(self.actionflipvertical)
         self.menuTentang.addAction(self.actionRotate)
         self.menuTentang.addAction(self.actionCroping)
+        self.menuTentang.addAction(self.actionTranslasi)
         self.menuEkstraksiFitur.addAction(self.actionWarnaRGB)
         self.menuEkstraksiFitur.addAction(self.actionWarnaRGBtoHSV)
         self.menuEkstraksiFitur.addAction(self.actionWarnaRGBtoYCrCb)
@@ -346,13 +371,33 @@ class Ui_Process(object):
         self.menubar.addAction(self.menuEdge_Detection.menuAction())
         self.menubar.addAction(self.menuMorfologi.menuAction())
         self.menubar.addAction(self.menuEkstraksiFitur.menuAction())
+        # self.label.mousePressEvent = self.mousePressEvent
 
+        # # Menyimpan status apakah ROI sedang dipilih atau tidak
+        # self.roi_selected = False
+
+        # self.start_x = 0  # Koordinat x awal saat klik
+        # self.start_y = 0  # Koordinat y awal saat klik
+        # self.end_x = 0    # Koordinat x akhir saat drag
+        # self.end_y = 0    # Koordinat y akhir saat drag
+        
+        # Path ke model pre-trained Mask R-CNN
+        #self.model_path = "C:\Python34\Lib\site-packages\PyQt5\GUI\Images Process/mask_rcnn_model.h5"
+
+        # Inisialisasi model Mask R-CNN
+        # self.model = modellib.MaskRCNN(mode="inference", model_dir="logs", config=config.Config())
+        
+        
+        # self.model.load_weights(self.model_path, by_name=True)
+        
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Image Processing"))
         self.menuView.setTitle(_translate("MainWindow", "View"))
         self.menuHistogram.setTitle(_translate("MainWindow", "Histogram"))
         self.menuColors.setTitle(_translate("MainWindow", "Colors"))
@@ -380,8 +425,10 @@ class Ui_Process(object):
         self.actionBrightness_Contrast.setText(_translate("MainWindow", "Brightness - Contrast"))
         self.actionInvers.setText(_translate("MainWindow", "Invers"))
         self.actionTreshold.setText(_translate("MainWindow", "Treshold"))
-        self.actionLog_Brightness.setText(_translate("MainWindow", "Segmentasi Citra"))
-        self.actionGamma_Corretion.setText(_translate("MainWindow", "ROI"))
+        self.actionSegmentasiCitra.setText(_translate("MainWindow", "Segmentasi Citra"))
+        self.actionRemoveBg.setText(_translate("MainWindow", "Remove Background"))
+        self.actionROI.setText(_translate("MainWindow", "Maunal ROI"))
+        self.actionAutoROI.setText(_translate("MainWindow", "Automatic ROI"))
         self.actionKuning.setText(_translate("MainWindow", "Kuning"))
         self.actionOrange.setText(_translate("MainWindow", "Orange"))
         self.actionCyan.setText(_translate("MainWindow", "Cyan"))
@@ -409,8 +456,8 @@ class Ui_Process(object):
         self.actionUnsharp_Masking.setText(_translate("MainWindow", "Unsharp Masking"))
         self.actionLow_Pass_Filler.setText(_translate("MainWindow", "Low Pass Filter"))
         self.actionHight_Pass_Filter.setText(_translate("MainWindow", "Hight Pass Filter"))
-        self.actionAvarage_Filter.setText(_translate("MainWindow", "Uniform Scaling"))
-        self.actionBandstop_Filter.setText(_translate("MainWindow", "Non-Uniform Scaling"))
+        self.actionUniformScaling.setText(_translate("MainWindow", "Uniform Scaling"))
+        self.actionNonUniformScaling.setText(_translate("MainWindow", "Non-Uniform Scaling"))
         self.actionEdge_Detection_1.setText(_translate("MainWindow", "Edge Detection 1"))
         self.actionEdge_Detection_2.setText(_translate("MainWindow", "Edge Detection 2"))
         self.actionEdge_Detection_3.setText(_translate("MainWindow", "Edge Detection 3"))
@@ -437,63 +484,300 @@ class Ui_Process(object):
         self.actionWarnaRGBtoHSV.setText(_translate("MainWindow","WarnaRGBtoHSV"))
         self.actionWarnaRGBtoYCrCb.setText(_translate("MainWindow","WarnaRGBtoYCrCb"))
         self.actionCroping.setText(_translate("MainWindow","Croping"))
+        self.actionTranslasi.setText(_translate("MainWindow","Translasi"))
+        MainWindow.setWindowIcon(QtGui.QIcon('C:/Python34/Lib/site-packages/PyQt5/GUI/Images Process/Icon/opencv_logo.png'))
 
-
-        
-
-
-    
 
     def frameArimatika(self): 
-        # Definisi fungsi frameArimatika yang merupakan metode dari suatu kelas. Fungsi ini mungkin digunakan untuk membuat dan menampilkan sebuah jendela Qt.
-        self.window = QtWidgets.QMainWindow() # Membuat sebuah objek jendela utama dari Qt.
-        self.ui = Ui_Aritmath() # Membuat sebuah objek dari kelas latihan.
-        self.ui.setupUi(self.window) # Memanggil metode setupUi dari objek ui untuk menginisialisasi tampilan antarmuka.
-        self.window.show()  # Menampilkan jendela utama. 
-        
-    def saveImage(self):
-        # Inisialisasi opsi untuk dialog pemilihan berkas
-        options = QFileDialog.Options()
-        # Menambahkan opsi mode baca saja ke dalam opsi dialog
-        options |= QFileDialog.ReadOnly 
+        self.window = QtWidgets.QMainWindow() 
+        self.ui = Ui_Aritmath()
+        self.ui.setupUi(self.window) 
+        self.window.show()  
+
+    def openFile(self):
+        options = QFileDialog.Options() # Inisialisasi opsi untuk dialog pemilihan berkas
+        options |= QFileDialog.ReadOnly # Menambahkan opsi mode baca saja ke dalam opsi dialog
+        # menghapus gambar dari label kedua
+        self.label_2.clear()
+ 
         # menampung file path dari dialog open file dan difilter hanya format png , jpg , bmp
-        file_name, _ = QFileDialog.getSaveFileName(None, "Save Image File", "", "Images (*.png *.jpg *.bmp *.jpeg);;All Files (*)", options=options)
+        file_name, _ = QFileDialog.getOpenFileName(None, "Open Image File", "", "Images (*.png *.jpg *.bmp *.jpeg);;All Files (*)", options=options)
         # check apakah terdapat path file
         if file_name:
-            #Simpan gambar yang telah diformat
+            # untuk membuat objek QImage dari suatu berkas gambar dengan nama file_name
+            image = QtGui.QImage(file_name)
+            # check varibale apakah tidak kosong
+            if not image.isNull():
+                # simpan gambar pada variable pixmap
+                pixmap = QtGui.QPixmap.fromImage(image)
+                self.label.setPixmap(pixmap)  # Set gambar pada label
+                self.label.setScaledContents(True) # set  kontennya agar sesuai dengan ukuran label.
+                self.image = image # menetapkan objek QImage yang sudah dibuat sebelumnya (dalam contoh kode sebelumnya) ke atribut self.image dari kelas atau objek saat ini
+                self.checkHisto = file_name
+
+    def saveImage(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.ReadOnly 
+        file_name, _ = QFileDialog.getSaveFileName(None, "Save Image File", "", "Images (*.png *.jpg *.bmp *.jpeg);;All Files (*)", options=options)
+        if file_name:
             pixmap = self.label_2.pixmap()
             pixmap.save(file_name)
-            # self.label_4.setText(file_name)
             
-    def rotasiGambare(self): # Definisi fungsi rotasiGambare yang mungkin merupakan metode dari suatu kelas.
+            
+    def convertRGBtoHSV(self):
+        # Mengambil gambar yang sedang ditampilkan di label_1
+        label_1_pixmap = self.label.pixmap()
+        if label_1_pixmap is None:
+            return
 
-        # Meminta pengguna untuk memasukkan sudut rotasi dalam derajat.
+        # Mengonversi QPixmap menjadi gambar OpenCV
+        image = self.qpixmap_to_cvimage(label_1_pixmap)
+
+        if image is None:
+            return
+
+        # Mengambil channel R, G, dan B dari gambar
+        R, G, B = image[:, :, 2], image[:, :, 1], image[:, :, 0]
+
+        # Hitung nilai V (Value)
+        V = np.maximum(R, np.maximum(G, B))
+        Vm = V - np.minimum(R, np.minimum(G, B))
+
+        # Inisialisasi matriks S (Saturation)
+        S = np.zeros_like(V)
+
+        # Hitung nilai S (Saturation) hanya pada piksel dengan V > 0
+        nonzero_v = V > 0
+        S[nonzero_v] = Vm[nonzero_v] / V[nonzero_v]
+
+        # Inisialisasi matriks H (Hue)
+        H = np.zeros_like(V)
+
+        # Hitung nilai H (Hue) hanya pada piksel dengan V > 0
+        nonzero_v = V > 0
+        R_normalized = (V - R)[nonzero_v] / Vm[nonzero_v]
+        G_normalized = (V - G)[nonzero_v] / Vm[nonzero_v]
+        B_normalized = (V - B)[nonzero_v] / Vm[nonzero_v]
+
+        H[nonzero_v] = np.where(V[nonzero_v] == R[nonzero_v], 60 * (2 + B_normalized - G_normalized), H[nonzero_v])
+        H[nonzero_v] = np.where(V[nonzero_v] == G[nonzero_v], 60 * (4 + R_normalized - B_normalized), H[nonzero_v])
+        H[nonzero_v] = np.where(V[nonzero_v] == B[nonzero_v], 60 * (G_normalized - R_normalized), H[nonzero_v])
+
+        # Konversi H, S, V ke rentang 0-255
+        H = (H / 360.0) * 255.0
+        S = S * 255.0
+        V = (V / 255.0) * 255.0
+
+        # Gabungkan H, S, V kembali menjadi gambar RGB
+        result_image = cv2.merge([H, S, V]).astype(np.uint8)
+
+        # Konversi hasil kembali ke QImage
+        h, w, c = result_image.shape
+        bytes_per_line = 3 * w
+        qimage_result = QtGui.QImage(
+            result_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888
+        )
+
+        # Tampilkan hasilnya di self.label_2
+        pixmap_result = QtGui.QPixmap.fromImage(qimage_result)
+        self.label_2.setPixmap(pixmap_result)
+
+    def convertRGBtoYCrCb(self):
+        # Mengambil gambar yang sedang ditampilkan di label_1
+        label_1_pixmap = self.label.pixmap()
+        if label_1_pixmap is None:
+            return
+
+        # Mengonversi QPixmap menjadi gambar OpenCV
+        image = self.qpixmap_to_cvimage(label_1_pixmap)
+
+        if image is None:
+            return
+
+        # Konversi gambar RGB ke YCbCr
+        ycbcr_image = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
+
+        # Ekstrak komponen Y, Cb, dan Cr
+        Y = ycbcr_image[:, :, 0]
+        Cb = ycbcr_image[:, :, 1]
+        Cr = ycbcr_image[:, :, 2]
+
+        # Konversi hasil kembali ke QImage
+        h, w = Y.shape
+        ycbcr_result = cv2.merge([Y, Cb, Cr])
+        bytes_per_line = 3 * w
+        qimage_result = QtGui.QImage(
+            ycbcr_result.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888
+        )
+
+        # Tampilkan hasilnya di self.label_2
+        pixmap_result = QtGui.QPixmap.fromImage(qimage_result)
+        self.label_2.setPixmap(pixmap_result)
+        
+    def binarizeImage(self, image, threshold=128):
+        # Convert the image to grayscale
+        grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        # Apply a binary threshold
+        _, binary_image = cv2.threshold(grayscale_image, threshold, 255, cv2.THRESH_BINARY)
+
+        return binary_image
+        
+    def qpixmap_to_cvimage(self, qpixmap):
+        qimage = qpixmap.toImage()
+        width = qimage.width()
+        height = qimage.height()
+        ptr = qimage.bits()
+        ptr.setsize(qimage.byteCount())
+        cv_image = np.array(ptr).reshape(height, width, 4)  # 4 channel (RGBA)
+        return cv_image
+        
+    def convertRGBtoRGB(self):
+        pixmap = self.label.pixmap()
+        if pixmap:
+            image = pixmap.toImage()
+            pixmap_2 = QtGui.QPixmap.fromImage(image)
+            self.label_2.setPixmap(pixmap_2)    
+            
+    def convertRGBtoRGBxlx(self):
+        if self.label.pixmap() is not None:
+            input_image = self.label.pixmap().toImage()
+            width = input_image.width()
+            height = input_image.height()
+
+            # Mengambil data piksel dari QImage
+            ptr = input_image.constBits()
+            ptr.setsize(height * width * 4)  # 4 bytes per piksel untuk RGBA
+            
+            # Mengonversi data piksel ke array numpy dan ubah ukuran ke (height, width, 4)
+            image = np.array(ptr).reshape(height, width, 4)
+            
+            # Ambil komponen RGB (R,G,B) dan normalisasikan
+            r, g, b = image[:,:,0], image[:,:,1], image[:,:,2]
+            r, g, b = r / 255.0, g / 255.0, b / 255.0
+
+            avg_r = np.mean(r)
+            avg_g = np.mean(g)
+            avg_b = np.mean(b)
+
+            # Tampilkan dalam dataframe
+            data = pd.DataFrame([[avg_r, avg_g, avg_b]], columns=['Average R', 'Average G', 'Average B'])
+
+            export_path, _ = QFileDialog.getSaveFileName(None, "Save RGB Data", "", "Excel Files (*.xlsx)")
+            if export_path:
+                data.to_excel(export_path, index=False)
+
+
+    def rotasiGambare(self):  
+        
         rotation , ok = QtWidgets.QInputDialog.getInt(None , "Rotate Image","Enter rotation angle (degress):",0,-360,360) 
-        if ok: # Memeriksa apakah input dari pengguna valid (tombol "OK" ditekan).
-            # Mengambil gambar saat ini dari label pertama (self.label) dan label kedua (self.label_2).
+        if ok: 
             current_pixmap = self.label.pixmap()
             second_pixmap = self.label_2.pixmap()
             
             # Mengecek apakah gambar pada label kedua (self.label_2) sudah ada atau belum.
             if self.label_2.pixmap() is None:
-                    # Jika belum ada, maka rotasi dilakukan pada gambar dari label pertama.
                     rotated_image = current_pixmap.transformed(QtGui.QTransform().rotate(rotation))
-                    # rotated_pixmap = QtGui.QPixmap.fromImage(rotated_image)
                     self.label_2.setPixmap(rotated_image)  # Menetapkan gambar yang sudah dirotasi ke label kedua.
                     self.label_2.setAlignment(QtCore.Qt.AlignCenter)
                     self.label_2.setScaledContents(True)
                     self.image = rotated_image.toImage() # Mengambil objek QImage dari gambar yang sudah dirotasi.
                     
             else:   
-                    # Jika sudah ada, maka rotasi dilakukan pada gambar dari label kedua. 
                     rotated_image = second_pixmap.transformed(QtGui.QTransform().rotate(rotation))
-                    # rotated_pixmap = QtGui.QPixmap.fromImage(rotated_image)
                     self.label_2.setPixmap(rotated_image) # Menetapkan gambar yang sudah dirotasi ke label kedua.
                     self.label_2.setAlignment(QtCore.Qt.AlignCenter)
                     self.label_2.setScaledContents(True)
                     self.image = rotated_image.toImage() # Mengambil objek QImage dari gambar yang sudah dirotasi.
                                    
-                
+    
+    def showCropDialog(self):
+            # Fungsi untuk menampilkan dialog pengaturan ukuran crop
+        xL, ok_xL = QInputDialog.getInt(MainWindow, "Croping", "Masukkan nilai xL:")
+        if ok_xL:
+            xR, ok_xR = QInputDialog.getInt(MainWindow, "Croping", "Masukkan nilai xR:")
+            if ok_xR:
+                yT, ok_yT = QInputDialog.getInt(MainWindow, "Croping", "Masukkan nilai yT:")
+                if ok_yT:
+                    yB, ok_yB = QInputDialog.getInt(MainWindow, "Croping", "Masukkan nilai yB:")
+                    if ok_yB:
+                        self.cropImage(xL, xR, yT, yB)
+
+    def cropImage(self, xL, xR, yT, yB):
+        # Fungsi untuk melakukan operasi crop pada gambar dengan ukuran yang diberikan
+
+        # Misalnya, tampilkan dialog pemilihan berkas gambar
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(MainWindow, "Pilih Gambar", "", "Gambar (*.jpg *.png)")
+        
+        if file_path:
+            # Baca gambar menggunakan OpenCV
+            image = cv2.imread(file_path)
+
+            # Cari gambar yang sudah di-crop sesuai ukuran yang diberikan
+            cropped_image = self.doCrop(image, xL, xR, yT, yB)
+
+            # Konversi gambar hasil crop menjadi format yang bisa ditampilkan di QLabel
+            height, width, channel = cropped_image.shape
+            bytes_per_line = 3 * width
+            q = QtGui.QImage(cropped_image.data, width, height, bytes_per_line, QtGui.QImage.Format_RGB888)
+            pixmap = QtGui.QPixmap.fromImage(q)
+
+            # Tampilkan gambar hasil crop di label_2
+            self.label_2.setPixmap(pixmap)
+            self.label_2.setScaledContents(True)  # Mengatur agar gambar ditampilkan dengan ukuran asli
+            self.label_2.repaint()  # Memastikan pembaruan tampilan
+
+    def doCrop(self, image, xL, xR, yT, yB):
+        # Fungsi untuk melakukan operasi crop pada gambar dengan ukuran yang diberikan
+        return image[yT:yB, xL:xR]
+    
+
+    def showTranslasiDialog(self):
+        # Fungsi untuk menampilkan dialog pengaturan nilai Tx dan Ty
+        Tx, ok_Tx = QInputDialog.getInt(MainWindow, "Translasi", "Masukkan nilai Tx:")
+        if ok_Tx:
+            Ty, ok_Ty = QInputDialog.getInt(MainWindow, "Translasi", "Masukkan nilai Ty:")
+            if ok_Ty:
+                self.translasiImage(Tx, Ty)
+
+    def translasiImage(self, Tx, Ty):
+        # Fungsi untuk melakukan operasi translasi pada gambar dengan nilai Tx dan Ty
+
+        # Misalnya, tampilkan dialog pemilihan berkas gambar
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(MainWindow, "Pilih Gambar", "", "Gambar (*.jpg *.png)")
+        
+        if file_path:
+            # Baca gambar menggunakan OpenCV
+            image = cv2.imread(file_path)
+
+            # Cari gambar yang sudah di-translasi sesuai dengan nilai Tx dan Ty yang diberikan
+            translated_image = self.doTranslasi(image, Tx, Ty)
+
+            # Konversi gambar hasil translasi menjadi format yang bisa ditampilkan di QLabel
+            height, width, channel = translated_image.shape
+            bytes_per_line = 3 * width
+            q_image = QtGui.QImage(translated_image.data, width, height, bytes_per_line, QtGui.QImage.Format_RGB888)
+            pixmap = QtGui.QPixmap.fromImage(q_image)
+
+            # Tampilkan gambar hasil translasi di label_2
+            self.label_2.setPixmap(pixmap)
+            self.label_2.setScaledContents(True)  # Mengatur agar gambar ditampilkan dengan ukuran asli
+            self.label_2.repaint()  # Memastikan pembaruan tampilan
+
+    def doTranslasi(self, image, Tx, Ty):
+        # Fungsi untuk melakukan operasi translasi pada gambar dengan nilai Tx dan Ty
+        rows, cols, _ = image.shape
+
+        # Membuat matriks translasi
+        M = np.float32([[1, 0, Tx], [0, 1, Ty]])
+
+        # Melakukan translasi menggunakan OpenCV
+        translated_image = cv2.warpAffine(image, M, (cols, rows))
+
+        return translated_image
+               
     def Average(self): #
         width = self.image.width()
         height = self.image.height()
@@ -597,26 +881,7 @@ class Ui_Process(object):
         # Memastikan nilai warna berada dalam rentang 0 hingga 255.
         return max(0, min(255, int(new_color_value)))    
     
-    def openFile(self):
-        options = QFileDialog.Options() # Inisialisasi opsi untuk dialog pemilihan berkas
-        options |= QFileDialog.ReadOnly # Menambahkan opsi mode baca saja ke dalam opsi dialog
-        # menghapus gambar dari label kedua
-        self.label_2.clear()
- 
-        # menampung file path dari dialog open file dan difilter hanya format png , jpg , bmp
-        file_name, _ = QFileDialog.getOpenFileName(None, "Open Image File", "", "Images (*.png *.jpg *.bmp *.jpeg);;All Files (*)", options=options)
-        # check apakah terdapat path file
-        if file_name:
-            # untuk membuat objek QImage dari suatu berkas gambar dengan nama file_name
-            image = QtGui.QImage(file_name)
-            # check varibale apakah tidak kosong
-            if not image.isNull():
-                # simpan gambar pada variable pixmap
-                pixmap = QtGui.QPixmap.fromImage(image)
-                self.label.setPixmap(pixmap)  # Set gambar pada label
-                self.label.setScaledContents(True) # set  kontennya agar sesuai dengan ukuran label.
-                self.image = image # menetapkan objek QImage yang sudah dibuat sebelumnya (dalam contoh kode sebelumnya) ke atribut self.image dari kelas atau objek saat ini
-                self.checkHisto = file_name
+
 
                          
     def Lightness(self):
@@ -1015,7 +1280,6 @@ class Ui_Process(object):
                     r = min(pixel.red() + 50, 255)  # Ubah sesuai kebutuhan
                     g = max(pixel.green() - 50, 0)   # Ubah sesuai kebutuhan
                     b = max(pixel.blue() - 100, 0)  # Ubah sesuai kebutuhan
-
                     # Setel warna piksel baru
                     inputan_image.setPixelColor(x, y, QtGui.QColor(r, g, b))
 
@@ -1031,18 +1295,18 @@ class Ui_Process(object):
             for x in range(image.width()):
                 for y in range(image.height()):
                     pixel = QtGui.QColor(inputan_image.pixel(x, y))
-
                     # Set red color to the pixel (R=255, G=0, B=0)
                     r = pixel.red()
                     g = 0
                     b = 0
-
                     # Set the new pixel color
                     inputan_image.setPixelColor(x, y, QtGui.QColor(r, g, b))
 
             self.output_image = QtGui.QPixmap.fromImage(inputan_image)
             self.label_2.setPixmap(self.output_image)
             self.label_2.setScaledContents(True)
+            
+    
 
     def prewittEdgeDetection(self):
         if self.label:
@@ -1095,15 +1359,12 @@ class Ui_Process(object):
                         for l in range(3):
                             a = i + k + 1
                             b = j + l + 1
-
                             if 0 <= a < width and 0 <= b < height:
                                 pixel_value = image.pixelColor(a, b)
                                 colorP[0] += ((kernel[k][l]) * pixel_value.red())
                                 colorP[1] += ((kernel[k][l]) * pixel_value.green())
                                 colorP[2] += ((kernel[k][l]) * pixel_value.blue())
-
                     colorP = [max(0, min(int(val), 255)) for val in colorP]
-
                     new_color = QtGui.QColor(colorP[0], colorP[1], colorP[2])
                     image.setPixelColor(i, j, new_color)
 
@@ -1136,12 +1397,10 @@ class Ui_Process(object):
 
                             sum_x += gray * kernel_x[i][j]
                             sum_y += gray * kernel_y[i][j]
-
-                    # Calculate the gradient magnitude
+                    # Menghitung gradient
                     magnitude = int(np.sqrt(sum_x**2 + sum_y**2))
                     output_qimage.setPixelColor(x, y, QtGui.QColor(magnitude, magnitude, magnitude))
 
-            # Convert QImage to QPixmap for display
             self.output_image = QtGui.QPixmap.fromImage(output_qimage)
             self.label_2.setPixmap(self.output_image)
             self.label_2.setScaledContents(True)
@@ -1512,45 +1771,34 @@ class Ui_Process(object):
             self.label_2.setScaledContents(True)
 
     def applyGaussianBlur3(self):
-        if self.label:
-            # Convert QPixmap to QImage for image processing
-            input_qimage = self.label.pixmap().toImage()
-            width = input_qimage.width()
-            height = input_qimage.height()
+        avgFilter = [[1, 2, 1], [2, 4, 2], [1, 2, 1]]
+        output_image = QtGui.QImage(self.image)
 
-            # Create a new QImage for the processed image
-            output_qimage = QtGui.QImage(width, height, QtGui.QImage.Format_RGB32)
+        for i in range(output_image.width()):
+            for j in range(output_image.height()):
+                # c1 = QtGui.QColor(self.input_image.pixel(i, j))
+                c1r, c1g, c1b = 0, 0, 0
 
-            # Gaussian kernel
-            kernel = np.array([[1, 2, 1],
-                               [2, 4, 2],
-                               [1, 2, 1]])
+                for k in range(3):
+                    for l in range(3):
+                        posX = i + k
+                        posY = j + l
 
-            kernel = kernel / 16.0  # Normalize the kernel
+                        if posX < 0 or posY < 0 or posX >= output_image.width() or posY >= output_image.height():
+                            c1r += 0
+                            c1g += 0
+                            c1b += 0
+                        else:
+                            pixel_color = QtGui.QColor(self.image.pixel(posX, posY))
+                            c1r += int((avgFilter[k][l] / 16) * pixel_color.red())
+                            c1g += int((avgFilter[k][l] / 16) * pixel_color.green())
+                            c1b += int((avgFilter[k][l] / 16) * pixel_color.blue())
 
-            for x in range(1, width - 1):
-                for y in range(1, height - 1):
-                    r, g, b, _ = input_qimage.pixelColor(x, y).getRgb()
+                output_image.setPixelColor(i, j, QtGui.QColor(c1r, c1g, c1b))  # Use setPixelColor instead of setPixel
 
-                    r_sum = 0
-                    g_sum = 0
-                    b_sum = 0
-
-                    for i in range(-1, 2):
-                        for j in range(-1, 2):
-                            neighbor_color = input_qimage.pixelColor(x + i, y + j)
-                            neighbor_r, neighbor_g, neighbor_b, _ = neighbor_color.getRgb()
-
-                            r_sum += neighbor_r * kernel[i + 1][j + 1]
-                            g_sum += neighbor_g * kernel[i + 1][j + 1]
-                            b_sum += neighbor_b * kernel[i + 1][j + 1]
-
-                    # Set the new pixel color
-                    output_qimage.setPixelColor(x, y, QtGui.QColor(int(r_sum), int(g_sum), int(b_sum)))
-
-            self.output_image = QtGui.QPixmap.fromImage(output_qimage)
-            self.label_2.setPixmap(self.output_image)
-            self.label_2.setScaledContents(True)
+        p = QtGui.QPixmap.fromImage(output_image)
+        self.label_2.setPixmap(p)
+        self.label_2.setScaledContents(True)
 
     def applyGaussianBlur5(self):
         if self.label:
@@ -1639,77 +1887,79 @@ class Ui_Process(object):
             self.label_2.setPixmap(self.output_image)
             self.label_2.setScaledContents(True)  
 
-    def extractfeaturesRGB(self):
-        if self.label:
-            # Convert QPixmap to QImage for image processing
-            input_qimage = self.label.pixmap().toImage()
-            width = input_qimage.width()
-            height = input_qimage.height()
 
-            # Initialize color feature counters
-            red_pixels = 0
-            green_pixels = 0
-            blue_pixels = 0
+        
+    def ApplyRemoveBg(self):
+        image = self.label.pixmap().toImage()
+        width = image.width()
+        height = image.height()
 
-            # Iterate through the image pixels to extract color features
-            for x in range(width):
-                for y in range(height):
-                    pixel_color = QtGui.QColor(input_qimage.pixel(x, y))
-                    r, g, b, _ = pixel_color.getRgb()
+        # Konversi gambar ke format yang dapat diolah oleh OpenCV
+        qimage = image.convertToFormat(QtGui.QImage.Format_RGB32)
+        ptr = qimage.bits()
+        ptr.setsize(qimage.byteCount())
+        arr = np.array(ptr).reshape(height, width, 4)
 
-                    # Count pixels in each color channel
-                    red_pixels += r
-                    green_pixels += g
-                    blue_pixels += b
+        # Konversi RGBA ke BGR
+        bgr_image = cv2.cvtColor(arr, cv2.COLOR_RGBA2BGR)
 
-            # Calculate the average color values
-            total_pixels = width * height
-            avg_red = red_pixels / total_pixels
-            avg_green = green_pixels / total_pixels
-            avg_blue = blue_pixels / total_pixels
+        # Konversi gambar ke dalam format yang lebih mudah diolah (float)
+        float_image = bgr_image.astype(float)
 
-            # Display color feature extraction result
-            result_text = f'Average Red: {avg_red:.2f}\nAverage Green: {avg_green:.2f}\nAverage Blue: {avg_blue:.2f}'
-            self.label_2.setText(result_text)
-            self.label_2.setScaledContents(True)
+        # Warna latar belakang yang akan dihapuskan
+        background_colors = [
+            np.array([255, 255, 255]),  # putih
+            np.array([0, 0, 0]),  # hitam
+            np.array([255, 0, 0]),  # merah
+            np.array([0, 255, 0]),  # hijau
+            np.array([0, 0, 255])  # biru
+        ]
 
-    def removeBackground(self):
-        if self.label:
-            # Convert QPixmap to QImage for image processing
-            input_qimage = self.label.pixmap().toImage()
-            width = input_qimage.width()
-            height = input_qimage.height()
+        # Inisialisasi mask untuk semua piksel yang akan dihapuskan
+        mask = np.zeros((height, width), dtype=bool)
 
-            # Create a new QImage for the processed image
-            output_qimage = QtGui.QImage(width, height, QtGui.QImage.Format_RGB32)
+        # Loop melalui semua warna latar belakang dan tambahkan mask untuk setiap warna
+        for background_color in background_colors:
+            color_difference = np.linalg.norm(float_image - background_color, axis=2)
+            threshold = 50  # Sesuaikan dengan ambang sesuai kebutuhan
+            mask = np.logical_or(mask, color_difference < threshold)
 
-            # Define the background color to be removed (e.g., green)
-            bg_color = QtGui.QColor(0, 255, 0)  # Green
+        # Invert mask untuk mendapatkan objek utama
+        mask = np.logical_not(mask)
+        
+        # Salin hanya piksel-piksel yang termasuk dalam objek utama
+        result = bgr_image.copy()
+        result[np.logical_not(mask)] = [0, 0, 0]  # Set piksel latar belakang menjadi hitam
 
-            # Threshold for color similarity
-            color_threshold = 100
+        # Konversi hasil kembali ke QImage
+        h, w, c = result.shape
+        bytes_per_line = 3 * w
+        qimage_result = QtGui.QImage(
+            result.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888
+        )
 
-            for x in range(width):
-                for y in range(height):
-                    pixel_color = QtGui.QColor(input_qimage.pixel(x, y))
+        # Tampilkan hasilnya di self.label_2
+        pixmap_result = QtGui.QPixmap.fromImage(qimage_result)
+        self.label_2.setPixmap(pixmap_result)
 
-                    # Calculate color difference
-                    color_diff = abs(pixel_color.red() - bg_color.red()) + \
-                                 abs(pixel_color.green() - bg_color.green()) + \
-                                 abs(pixel_color.blue() - bg_color.blue())
+        # Menyimpan gambar dengan ekstensi PNG dan tanpa latar belakang yang dipilih
+        options = QFileDialog.Options()
+        options |= QFileDialog.ReadOnly
+        file_path, _ = QFileDialog.getSaveFileName(self.label_2, "Simpan Gambar", "", "Image Files (*.png)", options=options)
 
-                    # Check if pixel is similar to the background color
-                    if color_diff < color_threshold:
-                        # Set the pixel to white (background removal)
-                        output_qimage.setPixelColor(x, y, QtGui.QColor(QtGui.Qt.white))
-                    else:
-                        # Keep the original pixel color
-                        output_qimage.setPixelColor(x, y, pixel_color)
+        if file_path:
+            # Salin hanya piksel yang termasuk dalam objek utama
+            result[np.logical_not(mask)] = [255, 255, 255]  # Set piksel latar belakang menjadi putih
 
-            # Convert QImage to QPixmap for display
-            self.output_image = QtGui.QPixmap.fromImage(output_qimage)
-            self.label_2.setPixmap(self.output_image)
-            self.label_2.setScaledContents(True)
+            # Konversi hasil kembali ke QImage
+            h, w, c = result.shape
+            bytes_per_line = 3 * w
+            qimage_result = QtGui.QImage(
+                result.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888
+            )
+
+            # Simpan gambar dengan ekstensi PNG tanpa latar belakang yang dipilih
+            qimage_result.save(file_path, "PNG")
 
     def segmentImage(self):
         if self.label:
@@ -1749,42 +1999,7 @@ class Ui_Process(object):
             self.label_2.setPixmap(self.output_image)
             self.label_2.setScaledContents(True)
 
-    # def cropImage(self):
-    #     if self.label and self.crop_start and self.crop_end:
-    #         # Create a QRect for the cropping region
-    #         crop_rect = QtGui.QRect(self.crop_start, self.crop_end)
-
-    #         # Convert QPixmap to QImage for image processing
-    #         input_qimage = self.label.pixmap().toImage()
-    #         width = input_qimage.width()
-    #         height = input_qimage.height()
-
-    #         # Create a new QImage for the cropped image
-    #         output_qimage = input_qimage.copy(crop_rect)
-
-    #         # Convert QImage to QPixmap for display
-    #         self.output_image = QtGui.QPixmap.fromImage(output_qimage)
-    #         self.label_2.setPixmap(self.output_image)
-    #         self.label_2.setScaledContents(True)
-
-    # def mousePressEvent(self, event):
-    #     if self.label:
-    #         self.crop_start = event.pos()
-    #         self.cropping = True
-
-    # def mouseMoveEvent(self, event):
-    #     if self.cropping:
-    #         self.crop_end = event.pos()
-    #         self.update()
-
-    # def mouseReleaseEvent(self, event):
-    #     if self.cropping:
-    #         self.crop_end = event.pos()
-    #         self.cropping = False
-    #         self.cropImage()
-    #         self.update()
-    
-    def Thresholding(self):
+    def Tresholding(self):
         if self.label:
             # Convert QPixmap to QImage for image processing
             input_qimage = self.label.pixmap().toImage()
@@ -1814,6 +2029,37 @@ class Ui_Process(object):
             self.output_image = QtGui.QPixmap.fromImage(output_qimage)
             self.label_2.setPixmap(self.output_image)
             self.label_2.setScaledContents(True)
+    
+
+            
+    def ShowUniformScaling(self):
+        scale_factor, ok = QInputDialog.getDouble(None, 'Uniform Scaling', 'Enter scale factor:')
+        
+        if ok:
+            self.scaleImage(scale_factor)
+            
+    def scaleImage(self, scale_factor):
+        transform = QtGui.QTransform()
+        transform.scale(scale_factor, scale_factor)
+        input_image = self.label.pixmap()
+        p = input_image.transformed(transform)
+        self.label_2.setPixmap(p)
+        self.label_2.setScaledContents(False)
+            
+    def ShowNonUniformScaling(self):
+        scaleX, ok1 = QInputDialog.getDouble(None, 'Non-Uniform Scaling', 'Enter scale factor for X-axis:')
+        scaleY, ok2 = QInputDialog.getDouble(None, 'Non-Uniform Scaling', 'Enter scale factor for Y-axis:')
+        
+        if ok1 and ok2:
+            self.NonUniscaleImage(scaleX, scaleY)
+
+    def NonUniscaleImage(self, scaleX, scaleY):
+        transform = QtGui.QTransform()
+        transform.scale(scaleX, scaleY)
+        input_image = self.label.pixmap()
+        p = input_image.transformed(transform)
+        self.label_2.setPixmap(p)
+        self.label_2.setScaledContents(False)
 
     def Identity(self):
         if self.label:
@@ -1841,13 +2087,10 @@ class Ui_Process(object):
                     B = int(round(color.blue() / level) * level)
                     image.setPixel(i, j, QtGui.QColor(R, G, B).rgb())
 
-            siap = QtGui.QPixmap.fromImage(image)
-            self.label_2.setPixmap(siap)
+            bitt = QtGui.QPixmap.fromImage(image)
+            self.label_2.setPixmap(bitt)
             self.label_2.setScaledContents(True)
 
-   
-
-   
 
     def Bit1(self):
         jumlah_bit = 1
@@ -1881,11 +2124,90 @@ class Ui_Process(object):
         jumlah_bit = 8
         self.bitdepth(jumlah_bit)
 
-             
-    def exitApplication(self):
-        # untuk keluar dari aplikasi
-        QtWidgets.qApp.quit()    
-        
+
+    def ROIselected(self):
+        if self.label.pixmap() is not None:
+            qImg = self.label.pixmap().toImage()
+            # Mengonversi QImage menjadi citra NumPy
+            width, height = qImg.width(), qImg.height()
+            ptr = qImg.constBits()
+            ptr.setsize(qImg.byteCount())
+            image_data = np.array(ptr).reshape(height, width, 4)  # 4 channel (RGBA)
+            
+            # Mengonversi citra RGBA menjadi citra BGR
+            image_bgr = cv2.cvtColor(image_data, cv2.COLOR_RGBA2RGB)
+            marked_image = image_bgr.copy()  # Salin citra asli
+            
+            while True:
+                roiSelected = cv2.selectROI("Pilih Area", marked_image, fromCenter=False)
+                
+                if roiSelected[2] > 0 and roiSelected[3] > 0:  # Pastikan area yang dipilih valid
+                    x, y, w, h = roiSelected
+
+                    # Tambahkan kotak hijau pada area yang dipilih
+                    cv2.rectangle(marked_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+                    # Konversi citra BGR ke RGB agar warna tetap sama
+                    marked_image_rgb = cv2.cvtColor(marked_image, cv2.COLOR_BGR2RGB)
+
+                    # Dapatkan ukuran dan tipe data citra yang akan ditampilkan di label_2
+                    height, width, channel = marked_image_rgb.shape
+                    bytesPerLine = 3 * width
+                    
+                    # Buat QImage dari citra NumPy yang sudah diberi kotak hijau
+                    qImg = QtGui.QImage(marked_image_rgb.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
+                    # Konversi QImage menjadi QPixmap
+                    pixmap = QtGui.QPixmap.fromImage(qImg)
+                    # Tampilkan QPixmap di QLabel label_2
+                    self.label_2.setPixmap(pixmap)
+                    # Untuk memastikan label mengukur ukuran citra yang ditampilkan
+                    self.label_2.setScaledContents(True)
+                else:
+                    break
+
+    def AutoROIselected(self):
+        if self.label.pixmap() is not None:
+            qImg = self.label.pixmap().toImage()
+            # Mengonversi QImage menjadi citra NumPy
+            width, height = qImg.width(), qImg.height()
+            ptr = qImg.constBits()
+            ptr.setsize(qImg.byteCount())
+            image_data = np.array(ptr).reshape(height, width, 4)  # 4 channel (RGBA)
+  
+
+            obj = cv2.cvtColor(image_data, cv2.COLOR_RGBA2RGB)
+
+            # Buat objek detektor wajah Haar Cascade
+            face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+            # Lakukan deteksi objek
+            faces = face_cascade.detectMultiScale(obj, scaleFactor=1.3, minNeighbors=9, minSize=(30, 30))
+
+            # Loop melalui objek yang terdeteksi dan tambahkan garis pen
+            for (x, y, w, h) in faces:
+                cv2.rectangle(obj, (x, y), (x+w, y+h), (0, 255, 0), 2)  # Tambahkan kotak hijau di sekitar objek
+
+            rgbImage = cv2.cvtColor(obj, cv2.COLOR_RGBA2RGB)
+            # Menampilkan gambar dengan objek yang terdeteksi
+            height, width, channel = rgbImage.shape
+            bytes_per_line = 3 * width
+            q_image = QtGui.QImage(rgbImage.data, width, height, bytes_per_line, QtGui.QImage.Format_RGB888).rgbSwapped()
+            pixmap = QtGui.QPixmap.fromImage(q_image)
+
+            # Tampilkan gambar pada QLabel
+            self.label_2.setPixmap(pixmap)
+
+
+    def exit_application(self):
+        QtWidgets.qApp.quit()
+    
+    def show_exit_confirmation(self):
+        reply = QMessageBox.question(None, 'Konfirmasi Keluar', 'Apakah Anda yakin ingin keluar?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            
+        if reply == QMessageBox.Yes:
+            self.exit_application()
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)

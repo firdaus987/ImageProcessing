@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from Main_Processing import Ui_Process
 from Main_Aritmath import Ui_Aritmath
+from PyQt5.QtGui import QIcon
 
 
 
@@ -70,6 +71,7 @@ class Ui_MainWindow(object):
         
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.pushButton.clicked.connect(self.Colours)
+        MainWindow.setWindowIcon(QtGui.QIcon('C:/Python34/Lib/site-packages/PyQt5/GUI/Images Process/Icon/opencv_logo.png'))
         
     def Colours(self):
         self.MainWindow = QtWidgets.QMainWindow()
